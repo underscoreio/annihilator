@@ -3,13 +3,18 @@ package underscore.annihilator
 import cats.Order
 
 sealed trait Interval[A] extends AnnihilatorSyntax {
+  import cats.syntax.order._
   import Interval._
 
   def intersect(that: Interval[A])(implicit order: Order[A]): Interval[A] =
     (this and that){ (i1, i2) =>
-      val start = order.max(i1.start, i2.start)
-      val end = order.min(i1.end, i2.end)
-      nonempty[A](start, end)
+      if((i2.end compare i1.start) < 0 || (i1.end compare i2.start) < 0) {
+        empty[A]
+      } else {
+        val start = i1.start max i2.start
+        val end = i1.end max i2.end
+        nonempty(start, end)
+      }
     }{
       empty
     }
